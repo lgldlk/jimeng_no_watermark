@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "即梦无水印下载",
+  "version": "1.0",
+  "description": "一键下载即梦平台的无水印图片和视频",
+  "permissions": [
+    "downloads",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://jimeng.jianying.com/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://jimeng.jianying.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  }
+} 

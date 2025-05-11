@@ -1,0 +1,22 @@
+.download-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  z-index: 1000;
+  transition: background-color 0.3s;
+}
+
+.download-btn:hover {
+  background-color: #45a049;
+}
+
+.download-btn:active {
+  background-color: #3d8b40;
+}

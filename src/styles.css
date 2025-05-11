@@ -1,0 +1,30 @@
+.download-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  opacity: 0; /* 默认隐藏 */
+}
+
+/* 当鼠标悬停在父容器上时显示按钮 */
+*:hover > .download-btn {
+  opacity: 1;
+}
+
+.download-btn:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+
+.download-btn:active {
+  background-color: #3d8b40;
+  transform: scale(0.95);
+}
