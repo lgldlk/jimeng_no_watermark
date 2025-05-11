@@ -1,15 +1,17 @@
 # 即梦无水印下载插件
 
 这是一个用于下载即梦平台无水印图片和视频的浏览器插件。
-
+![alt text](assets/image.png)
+![alt text](assets/image-1.png)
+![alt text](assets/image-2.png)
 ## 功能特点
 
 - 一键下载无水印图片和视频
 - 保持原始分辨率和格式
 - 支持Chrome、Firefox和Edge浏览器
-- 自动替换图片分辨率为2400x2400
 - 优化的性能和错误处理
 - 代码格式化和质量检查
+
 
 ## 安装说明
 

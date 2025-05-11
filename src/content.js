@@ -6,6 +6,7 @@ const CONTAINERS = [
 ];
 
 const VIDEO_CONTAINER_SELECTOR = '[class^="videoAndAction-"]'; // 视频容器选择器
+const IMAGE_CONTAINER_SELECTOR = '[class^="imageContainer-"]'; // 图片容器选择器
 const BUTTON_CLASS = 'download-btn';
 const CHECK_INTERVAL = 1000; // 检查间隔（毫秒）
 
@@ -46,14 +47,21 @@ class DownloadButton {
 
   download() {
     try {
-      // 获取当前的 src（对于视频，在点击时获取）
-      const downloadUrl =
-        this.type === 'video'
-          ? this.mediaElement.querySelector('video')?.src
-          : this.mediaElement.src;
+      // 获取当前的 src
+      let downloadUrl;
+      if (this.type === 'video') {
+        downloadUrl = this.mediaElement.querySelector('video')?.src;
+      } else if (this.type === 'image') {
+        downloadUrl = this.mediaElement.querySelector('img')?.src;
+      }
 
       if (!downloadUrl) {
-        console.error('No source URL found');
+        console.error(
+          'No source URL found',
+          this.mediaElement,
+          this.mediaElement.querySelector('video'),
+          this.type
+        );
         return;
       }
 
@@ -71,52 +79,49 @@ class DownloadButton {
 // 主要功能类
 class MediaDownloader {
   constructor() {
-    this.observers = new Map();
-    this.checkedElements = new WeakSet(); // 用于跟踪已处理的元素
+    this.checkedElements = new WeakSet();
     this.checkInterval = null;
     this.init();
   }
 
   init() {
-    // 初始检查
+    // 保持原有的页面检查
     this.checkForContainers();
-    this.checkForVideoContainers(); // 检查视频容器
+    this.checkForVideoContainers();
+    this.checkForImageContainers();
 
     // 设置定期检查
     this.checkInterval = setInterval(() => {
       this.checkForContainers();
-      this.checkForVideoContainers(); // 定期检查视频容器
+      this.checkForVideoContainers();
+      this.checkForImageContainers();
     }, CHECK_INTERVAL);
 
-    // 设置页面观察器
-    this.setupPageObserver();
-  }
+    // 监听body变化，检查模态框
+    const bodyObserver = new MutationObserver((mutations) => {
+      const modalWrapper = document.querySelector('.lv-modal-wrapper');
+      if (!modalWrapper) return;
 
-  setupPageObserver() {
-    // 监听整个页面的变化
-    const pageObserver = new MutationObserver(
-      debounce((mutations) => {
-        this.checkForContainers();
-        this.checkForVideoContainers();
-      }, 200)
-    );
+      const mediaTypes = [
+        { type: 'video', selector: 'video' },
+        { type: 'image', selector: 'img' },
+      ];
 
-    pageObserver.observe(document.body, {
+      mediaTypes.forEach(({ type, selector }) => {
+        const mediaElement = modalWrapper.querySelector(selector);
+        if (!mediaElement) return;
+
+        const container = mediaElement.closest('[class^="left-"]') || mediaElement.parentElement;
+        if (container && !container.querySelector(`.${BUTTON_CLASS}`)) {
+          this.addMediaDownloadButton(container, type);
+        }
+      });
+    });
+
+    // 观察body的变化
+    bodyObserver.observe(document.body, {
       childList: true,
       subtree: true,
-      attributes: true, // 监听属性变化
-      attributeFilter: ['class'], // 只监听类名变化
-    });
-  }
-
-  checkForVideoContainers() {
-    const videoContainers = document.querySelectorAll(VIDEO_CONTAINER_SELECTOR);
-    videoContainers.forEach((container) => {
-      if (!this.checkedElements.has(container)) {
-        this.checkedElements.add(container);
-        this.setupObserverForElement(container);
-        this.addVideoDownloadButton(container);
-      }
     });
   }
 
@@ -124,49 +129,14 @@ class MediaDownloader {
     CONTAINERS.forEach((containerSelector) => {
       const containers = document.querySelectorAll(containerSelector);
       containers.forEach((container) => {
-        // 检查是否已处理过该容器
         if (!this.checkedElements.has(container)) {
           this.checkedElements.add(container);
-          this.setupObserverForElement(container);
-          this.addDownloadButtonsToElement(container);
         }
       });
     });
   }
 
-  setupObserverForElement(element) {
-    if (!this.observers.has(element)) {
-      const observer = new MutationObserver(
-        debounce((mutations) => {
-          // 检查是否有新增节点或者属性变化
-          if (
-            mutations.some(
-              (mutation) =>
-                (mutation.type === 'childList' && mutation.addedNodes.length) ||
-                (mutation.type === 'attributes' && mutation.attributeName === 'src')
-            )
-          ) {
-            if (element.matches(VIDEO_CONTAINER_SELECTOR)) {
-              this.addVideoDownloadButton(element);
-            } else {
-              this.addDownloadButtonsToElement(element);
-            }
-          }
-        }, 200)
-      );
-
-      observer.observe(element, {
-        childList: true,
-        subtree: true,
-        attributes: true, // 监听属性变化
-        attributeFilter: ['src'], // 只监听src属性变化
-      });
-
-      this.observers.set(element, observer);
-    }
-  }
-
-  addVideoDownloadButton(container) {
+  addMediaDownloadButton(container, type) {
     if (!container || container.querySelector(`.${BUTTON_CLASS}`)) return;
 
     // 确保容器有相对定位
@@ -175,43 +145,14 @@ class MediaDownloader {
       container.style.position = 'relative';
     }
 
-    // 添加下载按钮到视频容器
-    const button = new DownloadButton(container, 'video');
-    container.appendChild(button.element);
-  }
+    const button = new DownloadButton(container, type);
 
-  addDownloadButtonsToElement(container) {
-    if (!container) return;
-
-    // 只处理图片，视频由专门的方法处理
-    const images = container.querySelectorAll('img');
-    images.forEach((image) => {
-      if (this.shouldAddButton(image)) {
-        const wrapper = this.ensureProperWrapper(image);
-        const button = new DownloadButton(image, 'image');
-        wrapper.appendChild(button.element);
-      }
-    });
-  }
-
-  ensureProperWrapper(element) {
-    const wrapper = element.parentElement;
-
-    // 检查父元素是否已经有相对定位
-    const position = window.getComputedStyle(wrapper).position;
-    if (position === 'static') {
-      wrapper.style.position = 'relative';
+    // 如果是在模态框中，确保按钮始终可见
+    if (container.closest('.lv-modal-wrapper')) {
+      button.element.style.opacity = '1';
     }
 
-    return wrapper;
-  }
-
-  shouldAddButton(element) {
-    return (
-      element.parentElement &&
-      !element.parentElement.querySelector(`.${BUTTON_CLASS}`) &&
-      element.src
-    ); // 确保元素有src属性
+    container.appendChild(button.element);
   }
 
   // 清理方法
@@ -227,6 +168,26 @@ class MediaDownloader {
     });
     this.observers.clear();
     this.checkedElements = new WeakSet();
+  }
+
+  checkForVideoContainers() {
+    const videoContainers = document.querySelectorAll(VIDEO_CONTAINER_SELECTOR);
+    videoContainers.forEach((container) => {
+      if (!this.checkedElements.has(container)) {
+        this.checkedElements.add(container);
+        this.addMediaDownloadButton(container, 'video');
+      }
+    });
+  }
+
+  checkForImageContainers() {
+    const imageContainers = document.querySelectorAll(IMAGE_CONTAINER_SELECTOR);
+    imageContainers.forEach((container) => {
+      if (!this.checkedElements.has(container)) {
+        this.checkedElements.add(container);
+        this.addMediaDownloadButton(container, 'image');
+      }
+    });
   }
 }
 
