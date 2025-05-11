@@ -4,6 +4,16 @@
 ![alt text](assets/image.png)
 ![alt text](assets/image-1.png)
 ![alt text](assets/image-2.png)
+
+# 插件使用
+1. 下载[压缩包](https://github.com/lgldlk/jimeng_no_watermark/archive/refs/tags/1.0.zip) 解压
+2. 在浏览器中打开 `chrome://extensions/`
+3. 打开 `开发者模式`
+4. 点击 `加载已解压的扩展程序`
+5. 选择解压后的文件夹
+6. 在即梦平台图片或视频预览旁会出现"无水印下载"按钮
+7. 点击按钮即可下载原始文件
+
 ## 功能特点
 
 - 一键下载无水印图片和视频
