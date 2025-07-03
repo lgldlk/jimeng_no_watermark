@@ -6,7 +6,7 @@
 ![alt text](assets/image-2.png)
 
 # 插件使用
-1. 下载[压缩包](https://github.com/lgldlk/jimeng_no_watermark/archive/refs/tags/1.0.zip) 解压
+1. 下载[压缩包](https://github.com/user-attachments/files/21030732/jimeng-no-watermark-v1.0.0.zip) 解压
 2. 在浏览器中打开扩展管理页面:
    - Chrome: `chrome://extensions/`
    - Firefox: `about:addons`
